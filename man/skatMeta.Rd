@@ -5,10 +5,11 @@
 Combine SKAT analyses from one or more cohorts
 }
 \description{
-Takes as input `skatCohort` objects (from the \code{\link{skatCohort}} function), and meta analyzes them
+Takes as input `skatCohort` objects (from e.g. \code{\link{skatCohort}}), and meta analyzes them.
 }
 \usage{
-skatMeta(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, method = "saddlepoint", snpNames = "Name", aggregateBy = "gene", mafRange = c(0,0.5), verbose=FALSE)
+skatMeta(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, method = "saddlepoint", 
+	snpNames = "Name", aggregateBy = "gene", mafRange = c(0,0.5), verbose=FALSE)
 }
 \arguments{
   \item{\dots}{
@@ -21,7 +22,7 @@ skatMeta(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, method = "sadd
 	Either a function to calculate testing weights, or a character specifying a vector of weights in the SNPInfo file. For skatMeta the default are the `beta' weights.
 	}
 	  \item{method}{
-	p-value calculation method. Default is 'saddlepoint', 'integration' is the Davies method used in the SKAT package. See pchisqsum() for more details
+	p-value calculation method. Default is 'saddlepoint', 'integration' is the Davies method used in the SKAT package. See pchisqsum() for more details.
 }
   \item{snpNames}{
 	The field of SNPInfo where the SNP identifiers are found.  Default is 'Name'
@@ -38,6 +39,8 @@ skatMeta(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, method = "sadd
 }
 \details{
 \code{skatMeta} implements an efficient SKAT meta analysis by meta-analyzing scores statistics and their variances.
+
+Note: all cohorts must use coordinated SNP Info files - that is, the SNP names and gene deffinitions must be the same. 
 }
 \value{
 a data frame with columns:
@@ -62,16 +65,19 @@ a data frame with columns:
 
 }
 \references{
-FIXME: methods paper
+Wu, M.C., Lee, S., Cai, T., Li, Y., Boehnke, M., and Lin, X. (2011) Rare Variant Association Testing for Sequencing Data Using the Sequence Kernel Association Test (SKAT). American Journal of Human Genetics.
 }
 \author{
 Arie Voorman, Jennifer Brody
 }
 \seealso{
-\code{\link{pchisqsum}}
 \code{\link{skatCohort}}
+\code{\link{burdenMeta}}
+\code{\link{singlesnpMeta}}
+\code{\link{pchisqsum}}
 }
 \examples{
+### load example data for 2 cohorts	
 data(skatExample)
 
 ####run on each cohort:
@@ -95,15 +101,15 @@ head(out.ss)
 ####binary data
 
 cohort1 <- skatCohort(Z=Z1, ybin~1, family=binomial(), SNPInfo = SNPInfo, data =pheno1)
-out <- skatMeta(cohort1, SNPInfo = SNPInfo)
-head(out)
+out.bin <- skatMeta(cohort1, SNPInfo = SNPInfo)
+head(out.bin)
 
 
 ####################
 ####survival data
 cohort1 <- skatCoxCohort(Z=Z1, Surv(time,status)~strata(sex)+bmi, SNPInfo = SNPInfo, data =pheno1)
-out <- skatMeta(cohort1, SNPInfo = SNPInfo)
-head(out)
+out.surv <- skatMeta(cohort1, SNPInfo = SNPInfo)
+head(out.surv)
 
 
 \dontrun{
@@ -129,6 +135,14 @@ head(cbind(out$p,skat.pkg.p))
 
 #Note: SKAT ignores family strucutre, resulting in p-values that are systematically too small: 
 plot(y=out$p,x=skat.pkg.p, ylab = "SKAT meta p-values", xlab = "SKAT p-values")
+abline(0,1)
+
+#ignore family structure:
+cohort1 <- skatCohort(Z=Z1, y~sex+bmi, SNPInfo = SNPInfo, data =pheno1)
+cohort2 <- skatCohort(Z=Z2, y~sex+bmi, SNPInfo = SNPInfo, data =pheno2)
+
+out.nofam <- skatMeta(cohort1,cohort2,SNPInfo=SNPInfo)
+plot(y=out.nofam$p,x=skat.pkg.p, ylab = "SKAT meta p-values", xlab = "SKAT p-values")
 abline(0,1)
 }
 

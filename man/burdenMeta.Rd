@@ -5,7 +5,7 @@
 Combine burden tests from multiple cohorts
 }
 \description{
-Takes as input `skatCohort` objects (from the skatCohort function), and meta analyzes them
+Takes as input `skatCohort` objects (from the \code{\link{skatCohort}} function), and meta-analyzes the corresponding burden test.
 }
 \usage{
 burdenMeta(..., SNPInfo=NULL, wts = 1, snpNames = "Name", aggregateBy = "gene", mafRange = c(0,0.5), verbose=FALSE)
@@ -66,9 +66,9 @@ a data frame with the following columns:
 		The number of `missing` SNPs. For a gene with a single SNP this is the number of individuals which do not contribute to the analysis, due to cohorts that did not report results for that SNP. For a gene with multiple SNPs, is totalled over the gene. 
 }
 }
-\references{
-FIXME: methods paper
-}
+%\references{
+%FIXME: methods paper
+%}
 \author{
 Arie Voorman, Jennifer Brody
 }
@@ -78,6 +78,7 @@ Arie Voorman, Jennifer Brody
 \code{\link{skatCohort}}
 }
 \examples{
+###load example data for two cohorts	
 data(skatExample)
 
 ####run on each cohort:

@@ -1,5 +1,6 @@
 burdenMeta <- function(..., SNPInfo=NULL, wts = 1, snpNames = "Name", aggregateBy = "gene", mafRange = c(0,0.5), verbose=FALSE){
 	if(is.null(SNPInfo)){ 
+		warning("No SNP Info file provided: loading the Illumina HumanExome BeadChip. See ?SNPInfo for more details")
 		load(paste(find.package("skatMeta"), "data", "SNPInfo.rda",sep = "/"))
 		aggregateBy = "SKATgene"
 	}	
@@ -91,7 +92,7 @@ burdenMeta <- function(..., SNPInfo=NULL, wts = 1, snpNames = "Name", aggregateB
 		res.numeric[ri,"cmafTotal"] = sum(maf,na.rm=TRUE)
 		res.numeric[ri,"cmafUsed"] = sum(maf[tmpwts != 0],na.rm=TRUE)
 		res.numeric[ri,"nsnpsTotal"] = length(maf)
-		res.numeric[ri,"nmiss"] = sum(n.miss, na.rm =T)
+		res.numeric[ri,"nmiss"] = sum(n.miss[tmpwts != 0], na.rm =T)
 		res.numeric[ri,"nsnpsUsed"] = sum(tmpwts != 0)
 		res.numeric[ri,"p"] = pchisq(bscore^2/bscorevar,lower.tail=FALSE,df=1)
 		if(verbose){

@@ -5,7 +5,7 @@
 Meta analyze single snp effects from multiple cohorts
 }
 \description{
-Takes as input `skatCohort` objects (from the skatCohort function), and meta analyzes them
+Takes as input `skatCohort` objects (from the \code{\link{skatCohort}} function), and meta analyzes them.
 }
 \usage{
 singlesnpMeta(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", cohortBetas = TRUE, verbose = FALSE)
@@ -31,13 +31,13 @@ singlesnpMeta(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", cohort
   }
 }
 \details{
-This function implements variance weighted meta-analysis of single SNP effects.
+This function meta analyzes score tests for single variant effects. Though the test is formally a score test, coefficients and standard errors are also returned, which can be interpreted as a `one-step` approximation to the maximum likelihood estimates.
 }
 \value{
 a data frame with the gene, snp name, meta analysis.
 }
 \references{
-FIXME: methods paper
+Lin, DY and Zeng, D. On the relative efficiency of using summary statistics versus individual-level data in meta-analysis. Biometrika. 2010.
 }
 \author{
 Arie Voorman, Jennifer Brody

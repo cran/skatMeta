@@ -8,7 +8,9 @@ Run SKAT on data from a single cohort.
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
-This function computes and organizes the neccesary output to efficiently meta-analyze a linear model SKAT and other tests. Note that the SKAT test is *not* computed by this function. The output must be passed to one of skatMeta, burdenMeta or singlesnpMeta.
+This function computes and organizes the neccesary output to efficiently meta-analyze a linear model SKAT and other tests. Note that the SKAT test is *not* computed by these functions. The output must be passed to one of \code{\link{skatMeta}}, \code{\link{burdenMeta}}, or \code{\link{singlesnpMeta}}.
+
+Unlike the SKAT package which operates on one gene at a time, these functions are intended to operate on many genes, e.g. a whole exome, to facilitate meta analysis of whole genomes or exomes.
 }
 \usage{
 skatCohort(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name", 
@@ -23,7 +25,7 @@ skatCoxCohort(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene",
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{Z}{
-	A genotype matrix (dosage matrix).  Typically composed of 0/1/2 entries for measured SNPs.  Use 'Na' for missing SNPs.
+	A genotype matrix (dosage matrix) - rows correspond to individuals and columns correspond to SNPs. Use 'NA' for missing values. The column names of this matrix should correspond to SNP names in the SNP information file.
 	}
   \item{formula}{
 	Base formula, of the kind used in glm() - typically of the form y~covariate1 + covariate2. For Cox models, the formula follows that of the coxph() function.
@@ -57,11 +59,14 @@ skatCoxCohort(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene",
   }
 }
 \details{
-	This function computes the neccesary information to meta analyze SKAT analyses: the individual SNP scores, their MAF, and a covariance matrix for each unit of aggregation.
+	This function computes the neccesary information to meta analyze SKAT analyses: the individual SNP scores, their MAF, and a covariance matrix for each unit of aggregation. Note that the SKAT test is *not* calculated by this function. The output must be passed to one of \code{\link{skatMeta}},\code{\link{burdenMeta}}, or \code{\link{singlesnpMeta}}.
 	
-A crucial component of the SKAT test is a common unit of aggregation accross cohorts, given in the SNP information file (argument \code{SNPInfo}), which pairs SNPs to a unit of aggregation (typically a gene). The additional arguments \code{Name} and \code{aggregateBy} specify the columns of the SNP information file which contain identifiers for each SNP, matching the column names of \code{Z}, and the associated gene or other unit of aggregation, respectively
+A crucial component of SKAT and other region-based tests is a common unit of aggregation accross cohorts. This is given in the SNP information file (argument \code{SNPInfo}), which pairs SNPs to a unit of aggregation (typically a gene). The additional arguments \code{Name} and \code{aggregateBy} specify the columns of the SNP information file which contain these pairings. Note that the column names of the genotype matrix \code{Z} must match the names given in the \code{Name} field.
 	
-	For \code{skatCoxCohort}, the signed likelihood ratio statistic is used instead of the score, as the score test is anti-conservative for proportional hazards regression. The code for this routine is based on the \code{coxph.fit} function from the \code{survival} package.
+Using \code{skatCohort}, users are strongly recommended to use all SNPs, even if they are monomorphic in your study. This is for two reasons; firstly, monomorphic SNPs provide information about MAF across all studies; without providing the information we are unable to tell if a missing SNP data was monomorphic in a cohort, or simply failed to genotype adequately in that cohort.  Second, even if some SNPs will be filtered out of a particular meta-analysis (e.g., because they are intronic or common) construct ing skatCohort objects describing all SNPs will reduce the workload for subsequent follow-up analyses.
+
+
+Note: to view results for a single cohort, one can pass a single skatCohort object to a function for meta-analysis.		
 }
 \value{
 	an object of class 'skatCohort'. This is a list, not meant for human consumption, but to be fed to \code{skatMeta()} or another function.
@@ -85,6 +90,8 @@ A crucial component of the SKAT test is a common unit of aggregation accross coh
 
 }
 \references{
+Wu, M.C., Lee, S., Cai, T., Li, Y., Boehnke, M., and Lin, X. (2011) Rare Variant Association Testing for Sequencing Data Using the Sequence Kernel Association Test (SKAT). American Journal of Human Genetics.
+		
 Chen H, Meigs JB, Dupuis J. Sequence Kernel Association Test for Quantitative Traits in Family Samples.  Genetic Epidemiology. (To appear)
 
 Lin, DY and Zeng, D. On the relative efficiency of using summary statistics versus individual-level data in meta-analysis. Biometrika. 2010.
@@ -93,11 +100,9 @@ Lin, DY and Zeng, D. On the relative efficiency of using summary statistics vers
 Arie Voorman, Jennifer Brody
 }
 \note{
-Using \code{skatCohort}, users are strongly recommended to use all SNPs, even if they are monomorphic in your study. This is for two reasons; firstly, monomorphic SNPs provide information about MAF across all studies; without providing the information we are unable to tell if a missing SNP data was monomorphic in a cohort, or simply failed to genotype adequately in that cohort.  Second, even if some SNPs will be filtered out of a particular meta-analysis (e.g., because they are intronic or common) construct ing skatCohort objects describing all SNPs will reduce the workload for subsequent follow-up analyses.
-
+	For \code{skatCoxCohort}, the signed likelihood ratio statistic is used instead of the score, as the score test is anti-conservative for proportional hazards regression. The code for this routine is based on the \code{coxph.fit} function from the \code{survival} package.
 
 }
-
 
 \seealso{
 \code{\link{skatMeta}}
@@ -106,6 +111,9 @@ Using \code{skatCohort}, users are strongly recommended to use all SNPs, even if
 \code{\link{coxph}}
 }
 \examples{
+	
+###load example data for two cohorts:
+### see ?skatExample	
 data(skatExample)
 
 ####run on each cohort:

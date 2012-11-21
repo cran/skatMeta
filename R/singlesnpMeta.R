@@ -1,5 +1,6 @@
 singlesnpMeta <- function(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", cohortBetas = TRUE, verbose = FALSE){
 	if(is.null(SNPInfo)){ 
+		warning("No SNP Info file provided: loading the Illumina HumanExome BeadChip. See ?SNPInfo for more details")
 		load(paste(find.package("skatMeta"), "data", "SNPInfo.rda",sep = "/"))
 		aggregateBy = "SKATgene"
 	}
