@@ -1,0 +1,104 @@
+\begin{thebibliography}{15}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Chen et~al.(2012)Chen, Meigs, and Dupuis]{chen2012sequence}
+H.~Chen, J.B. Meigs, and J.~Dupuis.
+\newblock Sequence kernel association test for quantitative traits in family
+  samples.
+\newblock \emph{Genetic Epidemiology}, 2012.
+
+\bibitem[Duchesne and de~Micheaux(2010)]{compquadform}
+P.~Duchesne and P.~Lafaye de~Micheaux.
+\newblock Computing the distribution of quadratic forms: Further comparisons
+  between the liu-tang-zhang approximation and exact methods.
+\newblock \emph{Computational Statistics and Data Analysis}, 54:\penalty0
+  858--862, 2010.
+
+\bibitem[Lee et~al.(2012)Lee, Wu, and Lin]{lee2012optimal}
+Seunggeun Lee, Michael~C Wu, and Xihong Lin.
+\newblock Optimal tests for rare variant effects in sequencing association
+  studies.
+\newblock \emph{Biostatistics}, 13\penalty0 (4):\penalty0 762--775, 2012.
+
+\bibitem[Lee et~al.(2013)Lee, Miropolsky, and Wu]{skat}
+Seunggeun Lee, Larisa Miropolsky, and Micheal Wu.
+\newblock \emph{SKAT: SNP-set (Sequence) Kernel Association Test}, 2013.
+\newblock URL \url{http://CRAN.R-project.org/package=SKAT}.
+\newblock R package version 0.82.
+
+\bibitem[Li and Leal(2008)]{li2008methods}
+Bingshan Li and Suzanne~M Leal.
+\newblock Methods for detecting associations with rare variants for common
+  diseases: application to analysis of sequence data.
+\newblock \emph{The American Journal of Human Genetics}, 83\penalty0
+  (3):\penalty0 311--321, 2008.
+
+\bibitem[Lin and Zeng(2010)]{lin2010relative}
+DY~Lin and D.~Zeng.
+\newblock On the relative efficiency of using summary statistics versus
+  individual-level data in meta-analysis.
+\newblock \emph{Biometrika}, 97\penalty0 (2):\penalty0 321--332, 2010.
+
+\bibitem[Lumley(2004)]{lumley2004analysis}
+Thomas Lumley.
+\newblock Analysis of complex survey samples.
+\newblock \emph{Journal of Statistical Software}, 9\penalty0 (1):\penalty0
+  1--19, 2004.
+
+\bibitem[Lumley and Scott(2013)]{lumley2013partial}
+Thomas Lumley and Alastair Scott.
+\newblock Partial likelihood ratio tests for the cox model under complex
+  sampling.
+\newblock \emph{Statistics in Medicine}, 32\penalty0 (1):\penalty0 110--123,
+  2013.
+
+\bibitem[Madsen and Browning(2009)]{madsen2009groupwise}
+Bo~Eskerod Madsen and Sharon~R Browning.
+\newblock A groupwise association test for rare mutations using a weighted sum
+  statistic.
+\newblock \emph{PLoS genetics}, 5\penalty0 (2):\penalty0 e1000384, 2009.
+
+\bibitem[{R Development Core Team}(2009)]{R}
+{R Development Core Team}.
+\newblock \emph{R: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria, 2009.
+\newblock URL \url{http://www.R-project.org}.
+\newblock {ISBN} 3-900051-07-0.
+
+\bibitem[Therneau(2012)]{coxme}
+Terry Therneau.
+\newblock \emph{coxme: Mixed Effects Cox Models.}, 2012.
+\newblock URL \url{http://CRAN.R-project.org/package=coxme}.
+\newblock R package version 2.2-3.
+
+\bibitem[Therneau et~al.(2012)Therneau, Atkinson, Sinnwell, Matsumoto, Schaid,
+  and McDonnell]{kinship2}
+Terry Therneau, Elizabeth Atkinson, Jason Sinnwell, Martha Matsumoto, Daniel
+  Schaid, and Shannon McDonnell.
+\newblock \emph{kinship2: Pedigree functions}, 2012.
+\newblock URL \url{http://CRAN.R-project.org/package=kinship2}.
+\newblock R package version 1.3.7.
+
+\bibitem[Therneau(1999)]{survival}
+Terry~M Therneau.
+\newblock A package for survival analysis in s.
+\newblock Technical report, Technical Report< http://www. mayo.
+  edu/hsr/people/therneau/survival. ps> Mayo Foundation, 1999.
+
+\bibitem[Voorman et~al.(2012)Voorman, Rice, and Lumley]{voorman2012fast}
+Arend Voorman, Ken Rice, and Thomas Lumley.
+\newblock Fast computation for genome-wide association studies using boosted
+  one-step statistics.
+\newblock \emph{Bioinformatics}, 28\penalty0 (14):\penalty0 1818--1822, 2012.
+
+\bibitem[Wu et~al.(2011)Wu, Lee, Cai, Li, Boehnke, and Lin]{wu2011rare}
+M.C. Wu, S.~Lee, T.~Cai, Y.~Li, M.~Boehnke, and X.~Lin.
+\newblock Rare-variant association testing for sequencing data with the
+  sequence kernel association test.
+\newblock \emph{The American Journal of Human Genetics}, 2011.
+
+\end{thebibliography}

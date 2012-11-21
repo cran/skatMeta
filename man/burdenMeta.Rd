@@ -8,7 +8,8 @@ Combine burden tests from multiple cohorts
 Takes as input `skatCohort` objects (from the \code{\link{skatCohort}} function), and meta-analyzes the corresponding burden test.
 }
 \usage{
-burdenMeta(..., SNPInfo=NULL, wts = 1, snpNames = "Name", aggregateBy = "gene", mafRange = c(0,0.5), verbose=FALSE)
+burdenMeta(..., SNPInfo=NULL, wts = 1, snpNames = "Name", aggregateBy = "gene", 
+	mafRange = c(0,0.5), verbose=FALSE)
 }
 \arguments{
   \item{\dots}{
@@ -74,7 +75,7 @@ Arie Voorman, Jennifer Brody
 }
 \seealso{
 \code{\link{skatMeta}}
-
+\code{\link{skatOMeta}}
 \code{\link{skatCohort}}
 }
 \examples{
@@ -95,8 +96,12 @@ bigZ <- matrix(NA,2*n,nrow(SNPInfo))
 colnames(bigZ) <- SNPInfo$Name
 for(gene in unique(SNPInfo$gene)){
 	snp.names <- SNPInfo$Name[SNPInfo$gene == gene]
-	bigZ[1:n,SNPInfo$gene == gene][,snp.names \%in\% colnames(Z1)] <- Z1[,na.omit(match(snp.names,colnames(Z1)))]
-	bigZ[(n+1):(2*n),SNPInfo$gene == gene][,snp.names \%in\% colnames(Z2)] <- Z2[,na.omit(match(snp.names,colnames(Z2)))]
+	bigZ[1:n,SNPInfo$gene == gene][,
+		snp.names \%in\% colnames(Z1)] <- Z1[,
+		na.omit(match(snp.names,colnames(Z1)))]
+	bigZ[(n+1):(2*n),SNPInfo$gene == gene][,
+		snp.names \%in\% colnames(Z2)] <- Z2[,
+		na.omit(match(snp.names,colnames(Z2)))]
 }
 pheno <- rbind(pheno1[,c("y","sex","bmi")],pheno2[,c("y","sex","bmi")])
 burden.p <- c(by(SNPInfo$Name, SNPInfo$gene,function(snp.names){

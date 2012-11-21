@@ -38,9 +38,10 @@ skatMeta <- function(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, me
 			cohort.gene <- cohorts[[cohort.k]][[gene]]
 			
 			if(!is.null(cohort.gene)){
+				cohort.gene <- lapply(cohort.gene,function(x){replace(x,is.nan(x),0)})
 				sub <- match(snp.names.list[[gene]],colnames(cohort.gene$cov))
 				if(any(is.na(sub)) | any(sub != 1:length(sub), na.rm=TRUE) | length(cohort.gene$maf) > nsnps.sub){
-							if(any(is.na(sub))) warning("Some SNPs were not in SNPInfo file for gene ", gene," and cohort ",names(cohorts)[cohort.k])
+							#if(any(is.na(sub))) warning("Some SNPs were not in SNPInfo file for gene ", gene," and cohort ",names(cohorts)[cohort.k])
 							cohort.gene$cov <- cohort.gene$cov[sub,sub,drop=FALSE]
 							cohort.gene$cov[is.na(sub),] <- cohort.gene$cov[,is.na(sub)] <- 0
 							
@@ -77,7 +78,7 @@ skatMeta <- function(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, me
 			}
 		}
 		if(is.function(wts)){
-			tmpwts <- wts(maf)
+			tmpwts <- ifelse(maf > 0, wts(maf),0)
 		} else if(is.character(wts)){
 			tmpwts <- as.numeric(SNPInfo[SNPInfo[,aggregateBy]==gene,wts])
 		} else {
@@ -95,7 +96,7 @@ skatMeta <- function(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, me
     	}
     	
     	if(any(lambda > 0)){
-    		p<-pchisqsum(Qmeta,rep(1,length(lambda)),lambda,lower.tail=FALSE,method=method)
+    		p<-pchisqsum2(Qmeta,lambda,method=method)$p
 		} else {
 			p<-1
 		}

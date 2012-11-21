@@ -15,7 +15,7 @@ singlesnpMeta <- function(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "g
 	
 	genelist <- na.omit(unique(SNPInfo[,aggregateBy]))
 	res.strings <- data.frame("gene"=as.character(SNPInfo[,aggregateBy]),
-					"Name" = as.character(SNPInfo$Name),stringsAsFactors=F)
+					"Name" = as.character(SNPInfo[,snpNames]),stringsAsFactors=F)
 	res.numeric <- matrix(NA, nrow= nrow(res.strings),ncol =  length(c("p","maf","nmiss","ntotal", "beta" ,"se" )))
 	colnames(res.numeric) <- c("p","maf","nmiss","ntotal", "beta" ,"se" )	
 					
@@ -50,22 +50,21 @@ singlesnpMeta <- function(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "g
 			cohort.gene <- cohorts[[cohort.k]][[gene]]
 			
 			if(!is.null(cohort.gene)){
+				cohort.gene <- lapply(cohort.gene,function(x){replace(x,is.nan(x),0)})
 				sub <- match(SNPInfo.sub[,snpNames],colnames(cohort.gene$cov))
-				#if(!all(is.na(sub))){
-					if(any(is.na(sub)) | any(sub != 1:length(sub), na.rm=TRUE) | length(cohort.gene$maf) > nsnps.sub){
-							if(any(is.na(sub))) warning("Some SNPs were not in SNPInfo file for gene ", gene," and cohort ",cohort.names[[cohort.k]])							
-							cohort.gene$maf <- cohort.gene$maf[sub]
-							cohort.gene$maf[is.na(sub)] <- -1
+				if(any(is.na(sub)) | any(sub != 1:length(sub), na.rm=TRUE) | length(cohort.gene$maf) > nsnps.sub){
+						if(any(is.na(sub))) warning("Some SNPs were not in SNPInfo file for gene ", gene," and cohort ",cohort.names[[cohort.k]])							
+						cohort.gene$maf <- cohort.gene$maf[sub]
+						cohort.gene$maf[is.na(sub)] <- -1
 							
-							cohort.gene$scores <- cohort.gene$scores[sub]
-							cohort.gene$scores[is.na(sub)] <- 0
+						cohort.gene$scores <- cohort.gene$scores[sub]
+						cohort.gene$scores[is.na(sub)] <- 0
 							
-							cohort.gene$cov <- cohort.gene$cov[sub,sub,drop=FALSE]
-							cohort.gene$cov[is.na(sub),] <- cohort.gene$cov[,is.na(sub)] <- 0		
+						cohort.gene$cov <- cohort.gene$cov[sub,sub,drop=FALSE]
+						cohort.gene$cov[is.na(sub),] <- cohort.gene$cov[,is.na(sub)] <- 0		
 					}				
 					
-					n.total <- n.total + (cohort.gene$maf >= 0)*cohort.gene$n
-				
+					n.total <- n.total + (cohort.gene$maf >= 0)*cohort.gene$n				
 					n.miss[cohort.gene$maf < 0] <- n.miss[cohort.gene$maf < 0] + cohort.gene$n
 					cohort.gene$maf[cohort.gene$maf < 0] <- 0
 	
@@ -75,25 +74,23 @@ singlesnpMeta <- function(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "g
 					vary.ave <- vary.ave + max(cohort.gene$n,na.rm=T)*cohort.gene$sey^2
 		
 					if(cohortBetas){
-						resdf.cohort[ri,paste(c("beta"),cohort.names ,sep=".")] <- cohort.gene$scores/diag(cohort.gene$cov)
-						resdf.cohort[ri,paste(c("se"), cohort.names ,sep=".")] <- cohort.gene$sey/sqrt(diag(cohort.gene$cov))
+						resdf.cohort[ri,paste(c("beta"),cohort.names[cohort.k] ,sep=".")] <- cohort.gene$score/diag(cohort.gene$cov)
+						resdf.cohort[ri,paste(c("se"), cohort.names[cohort.k] ,sep=".")] <- cohort.gene$sey/sqrt(diag(cohort.gene$cov))
 					}
 				}
-			#}
 		}
-		#n.total[n.total ==0] <- 0
 		vary.ave <- vary.ave/n.total
 
 		maf <- maf/(2*n.total)
 		maf[is.nan(maf)] <- 0
 		maf <- sapply(maf, function(x){min(x,1-x)})
 				
-		res.numeric[ri,c("beta","se","maf","nmiss","ntotal","p")] <- cbind(mscore/scorevar,
+		res.numeric[ri,c("beta","se","maf","nmiss","ntotal","p")] <- cbind( ifelse(scorevar !=0, mscore/scorevar, NA),
 																	sqrt(1/scorevar),
 																	maf,
 																	n.miss,
 																	n.total,
-																	pchisq(mscore^2/scorevar,lower.tail=FALSE,df=1))
+																	ifelse(scorevar !=0, pchisq(mscore^2/scorevar,lower.tail=FALSE,df=1), NA))
 
 		if(verbose){
 			pb.i <- pb.i+1

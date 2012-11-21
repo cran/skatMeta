@@ -21,10 +21,16 @@ function(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name", aggre
 	mysnps <- colnames(Z)
 	
 	SNPInfo[,aggregateBy] <- as.character(SNPInfo[,aggregateBy])
-	which.snps.Z <- colnames(Z) %in% SNPInfo[,snpNames]
-	which.snps <- match(mysnps[which.snps.Z],SNPInfo[,snpNames])
 	
-	nsnps <- sum(which.snps.Z)
+	SItoZ <- which(colnames(Z) %in% SNPInfo[,snpNames])
+	ZtoSI <- which(SNPInfo[,snpNames] %in% colnames(Z))
+
+	which.snps.Z <- colnames(Z) %in% SNPInfo[,snpNames]
+	ZtoSI <- match(SNPInfo[,snpNames], mysnps[which.snps.Z])
+	#which.snps <- match(mysnps[which.snps.Z],SNPInfo[,snpNames])
+	#which.snps <- which(SNPInfo[,snpNames] %in% mysnps[which.snps.Z])
+	
+	nsnps <- sum(!is.na(ZtoSI)) #sum(which.snps.Z)
 	if(nsnps == 0){ 
 		stop("no column names in Z match SNP names in the SNP Info file!")
 	}
@@ -37,17 +43,15 @@ function(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name", aggre
 	
 	##fit individual betas/se's
 	maf0 <- colMeans(Z,na.rm=TRUE)[which.snps.Z]/2
+  	maf0[is.nan(maf0)] <- -1
+  
+	maf <- maf0[ZtoSI]
+	names(maf) <- SNPInfo[,snpNames]
 	
-	maf <- numeric(nrow(SNPInfo))
-	maf[na.omit(which.snps)] <- maf0
-	
-	scores <- numeric(nrow(SNPInfo))
-	
-	##impute missing SNPs
-	
-	scores[na.omit(which.snps)] <- apply(Z[,which.snps.Z, drop = FALSE],2,function(z){
+	scores <- apply(Z[,which.snps.Z, drop = FALSE],2,function(z){
 		if(any(is.na(z))){
-			mz <- mean(z, na.rm=TRUE)
+      if(all(is.na(z))) z <- rep(0,length(z))
+      mz <- mean(z, na.rm=TRUE)
 			z[is.na(z)] <- mz
 		}
         if (verbose){
@@ -55,7 +59,9 @@ function(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name", aggre
 				if(get("pb.i", env)%%ceiling(nsnps/100) == 0) setTxtProgressBar(get("pb",env),get("pb.i",env))
 			}
 		sum(res*z)
-		})
+		})[ZtoSI]
+	scores[is.na(scores)] <- 0
+	names(scores) <- SNPInfo[,snpNames]
 	
 	if(verbose) close(pb)
 	
@@ -81,13 +87,14 @@ function(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name", aggre
     	pb.i <- 0
     }
 	##get covariance matrices:
-	re <- as.list(by(SNPInfo[,snpNames], SNPInfo[,aggregateBy],function(snp.names){
+	re <- tapply(SNPInfo[,snpNames], SNPInfo[,aggregateBy],function(snp.names){
 		inds <- match(snp.names,colnames(Z))
 		mcov <- matrix(0,length(snp.names),length(snp.names))
 		if(length(na.omit(inds)) > 0){
 			Z0 <- sqrt(nullmodel$family$var(nullmodel$fitted))*as.matrix(Z[,na.omit(inds),drop=FALSE])
 			if(any(is.na(Z0))) Z0 <- apply(Z0,2,function(z){
-				mz <- mean(z, na.rm=TRUE)
+			  if(all(is.na(z))) z <- rep(0,length(z))
+       			mz <- mean(z, na.rm=TRUE)
 				z[is.na(z)] <- mz
 				z
 			})
@@ -99,9 +106,10 @@ function(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name", aggre
 				if(get("pb.i", env)%%ceiling(ngenes/100) == 0) setTxtProgressBar(get("pb",env),get("pb.i",env))		  
 		}
 		return(mcov)
-	}),simplify = FALSE)
+	},simplify = FALSE)
 	sey = sqrt(var(residuals(nullmodel,"pearson"))*(nrow(X1)-1)/(nrow(X1)-ncol(X1)) )
 	if(family$family == "binomial") sey = 1
+	
 	##aggregate
 	for(k in 1:length(re)){
 		re[[k]] <- list("scores" = scores[[k]], "cov" = re[[k]], "n" =n, "maf" = maf[[k]], "sey" = sey ) 

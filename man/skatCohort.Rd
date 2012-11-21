@@ -17,7 +17,7 @@ skatCohort(Z, formula, family = gaussian(), SNPInfo=NULL, snpNames = "Name",
 	aggregateBy = "gene", data=parent.frame(), verbose = FALSE)
 
 skatFamCohort(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", 
-	data=parent.frame(), fullkins, id=NULL, sparse = TRUE, verbose = FALSE)
+	data=parent.frame(), fullkins, sparse = TRUE, verbose = FALSE)
 
 skatCoxCohort(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", 
 	data=parent.frame(), verbose =FALSE)
@@ -50,9 +50,6 @@ skatCoxCohort(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene",
   }
   \item{fullkins}{
   	for skatFamCohort: the kinship matrix. See lmekin and the kinship2 package for more details
-  }
-  \item{id}{
-  	for skatFamCohort: id's of the subjects in the kinship matrix
   }
   \item{sparse}{
   	for skatFamCohort: whether or not to use a sparse Matrix approximation for dense kinship matrices (defaults to TRUE)
@@ -102,12 +99,14 @@ Arie Voorman, Jennifer Brody
 \note{
 	For \code{skatCoxCohort}, the signed likelihood ratio statistic is used instead of the score, as the score test is anti-conservative for proportional hazards regression. The code for this routine is based on the \code{coxph.fit} function from the \code{survival} package.
 
+Please see the package vignette for more details.
 }
 
 \seealso{
 \code{\link{skatMeta}}
 \code{\link{burdenMeta}}
 \code{\link{singlesnpMeta}}
+\code{\link{skatOMeta}}
 \code{\link{coxph}}
 }
 \examples{
@@ -118,7 +117,8 @@ data(skatExample)
 
 ####run on each cohort:
 cohort1 <- skatCohort(Z=Z1, y~sex+bmi, SNPInfo = SNPInfo, data =pheno1)
-cohort2 <- skatFamCohort(Z=Z2, y~sex+bmi, SNPInfo = SNPInfo, fullkins=kins, id=pheno2$id, data=pheno2)
+cohort2 <- skatFamCohort(Z=Z2, y~sex+bmi, SNPInfo = SNPInfo, 
+	fullkins=kins, data=pheno2)
 
 #### combine results:
 ##skat
@@ -133,6 +133,7 @@ head(out.t1)
 out.ss <- singlesnpMeta(cohort1,cohort2, SNPInfo = SNPInfo)
 head(out.ss)
 
+\dontrun{
 ########################
 ####binary data
 
@@ -143,10 +144,11 @@ head(out)
 
 ####################
 ####survival data
-cohort1 <- skatCoxCohort(Z=Z1, Surv(time,status)~strata(sex)+bmi, SNPInfo = SNPInfo, data =pheno1)
+cohort1 <- skatCoxCohort(Z=Z1, Surv(time,status)~strata(sex)+bmi, SNPInfo = SNPInfo, 
+	data =pheno1)
 out <- skatMeta(cohort1, SNPInfo = SNPInfo)
 head(out)
-
 }
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+}
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

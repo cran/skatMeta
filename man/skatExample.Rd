@@ -43,8 +43,8 @@ Z1 <- replicate(d,rbinom(n,2,rbeta((n),3,200)))
 ## assign SNP id's to the columns 
 colnames(Z1) <- sample(d+50,d) + 1e6
 
-pheno1 <-  data.frame("y" = rnorm(n), "sex"=rep(1:2,(n/2)), "bmi"=rnorm(n,25,2),"ybin" = rbinom(n,1,.5), "time"=rpois(n,5), 
-              "status"=rbinom(n,1,.9))
+pheno1 <-  data.frame("y" = rnorm(n), "sex"=rep(1:2,(n/2)), "bmi"=rnorm(n,25,2),
+	"ybin" = rbinom(n,1,.5), "time"=rpois(n,5), "status"=rbinom(n,1,.9))
 
 genes <- paste0("gene",1:k)
 SNPInfo <- data.frame("Name" =1:(d+50) + 1e6, "gene" = sort(sample(genes,d+50,replace=T)))
@@ -58,7 +58,8 @@ fullped$mo[(1:(n/4))*4-1]<-fullped$mo[(1:(n/4))*4]<-(1:(n/4))*4+9998
 kins = makekinship(fullped$famid, fullped$id, fullped$fa, fullped$mo)
 
 ## generate a phenotype with 20\% `heritability': 
-pheno2<-data.frame("id"=10001:(10000+n),"y"=t(rnorm(n)\%*\%chol(0.2*2*as.matrix(kins) + 0.8*diag(n))),"sex"=rep(1:2,(n/2)),"bmi"=rnorm(n,25,2))
+pheno2<-data.frame("id"=10001:(10000+n),"y"=t(rnorm(n)\%*\%chol(0.2*2*as.matrix(kins) + 
+	0.8*diag(n))),"sex"=rep(1:2,(n/2)),"bmi"=rnorm(n,25,2))
 
 Z2 <- replicate(d,rbinom(n,2,rbeta((n/4),3,200)[fullped$famid]))
 colnames(Z2) <- sample(d+50,d) + 1e6

@@ -40,7 +40,9 @@ skatMeta(..., SNPInfo=NULL, wts = function(maf){dbeta(maf,1,25)}, method = "sadd
 \details{
 \code{skatMeta} implements an efficient SKAT meta analysis by meta-analyzing scores statistics and their variances.
 
-Note: all cohorts must use coordinated SNP Info files - that is, the SNP names and gene deffinitions must be the same. 
+Note: all cohorts must use coordinated SNP Info files - that is, the SNP names and gene definitions must be the same. 
+
+Please see the package vignette for more details.
 }
 \value{
 a data frame with columns:
@@ -56,7 +58,7 @@ a data frame with columns:
 \item{cmaf}{
 	The cumulative minor allele frequency.
 }
-\item{nsnps}{
+\item{nmiss}{
 	The number of `missing` SNPs. For a gene with a single SNP this is the number of individuals which do not contribute to the analysis, due to cohorts that did not report results for that SNP. For a gene with multiple SNPs, is totalled over the gene. 
 }
 \item{nsnps}{
@@ -74,7 +76,8 @@ Arie Voorman, Jennifer Brody
 \code{\link{skatCohort}}
 \code{\link{burdenMeta}}
 \code{\link{singlesnpMeta}}
-\code{\link{pchisqsum}}
+\code{\link{skatOMeta}}
+%\code{\link{pchisqsum}}
 }
 \examples{
 ### load example data for 2 cohorts	
@@ -82,7 +85,7 @@ data(skatExample)
 
 ####run on each cohort:
 cohort1 <- skatCohort(Z=Z1, y~sex+bmi, SNPInfo = SNPInfo, data =pheno1)
-cohort2 <- skatFamCohort(Z=Z2, y~sex+bmi, SNPInfo = SNPInfo, fullkins=kins, id=pheno2$id, data=pheno2)
+cohort2 <- skatFamCohort(Z=Z2, y~sex+bmi, SNPInfo = SNPInfo, fullkins=kins, data=pheno2)
 
 #### combine results:
 ##skat
@@ -107,7 +110,8 @@ head(out.bin)
 
 ####################
 ####survival data
-cohort1 <- skatCoxCohort(Z=Z1, Surv(time,status)~strata(sex)+bmi, SNPInfo = SNPInfo, data =pheno1)
+cohort1 <- skatCoxCohort(Z=Z1, Surv(time,status)~strata(sex)+bmi, SNPInfo = SNPInfo, 
+	data =pheno1)
 out.surv <- skatMeta(cohort1, SNPInfo = SNPInfo)
 head(out.surv)
 
@@ -120,8 +124,12 @@ bigZ <- matrix(NA,2*n,nrow(SNPInfo))
 colnames(bigZ) <- SNPInfo$Name
 for(gene in unique(SNPInfo$gene)){
 	snp.names <- SNPInfo$Name[SNPInfo$gene == gene]
-	bigZ[1:n,SNPInfo$gene == gene][,snp.names \%in\% colnames(Z1)] <- Z1[,na.omit(match(snp.names,colnames(Z1)))]
-	bigZ[(n+1):(2*n),SNPInfo$gene == gene][,snp.names \%in\% colnames(Z2)] <- Z2[,na.omit(match(snp.names,colnames(Z2)))]
+	bigZ[1:n,SNPInfo$gene == gene][,
+		snp.names \%in\% colnames(Z1)] <- Z1[,
+		na.omit(match(snp.names,colnames(Z1)))]
+	bigZ[(n+1):(2*n),SNPInfo$gene == gene][,
+		snp.names \%in\% colnames(Z2)] <- Z2[,
+		na.omit(match(snp.names,colnames(Z2)))]
 }
 pheno <- rbind(pheno1[,c("y","bmi","sex")],pheno2[,c("y","bmi","sex")])
 obj <- SKAT_Null_Model(y~sex+bmi+gl(2,nrow(pheno1)),data=pheno)

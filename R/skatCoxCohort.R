@@ -18,9 +18,10 @@ skatCoxCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 	
 	SNPInfo[,aggregateBy] <- as.character(SNPInfo[,aggregateBy])
 	which.snps.Z <- colnames(Z) %in% SNPInfo[,snpNames]
-	which.snps <- match(mysnps[which.snps.Z],SNPInfo[,snpNames])
+	ZtoSI <- match(SNPInfo[,snpNames], mysnps[which.snps.Z])
+	#which.snps <- match(mysnps[which.snps.Z],SNPInfo[,snpNames])
 	
-	nsnps <- sum(which.snps.Z)
+	nsnps <- sum(!is.na(ZtoSI)) #sum(which.snps.Z)
 	if(nsnps == 0){ 
 		stop("no column names in Z match SNP names in the SNP Info file!")
 	}
@@ -33,12 +34,16 @@ skatCoxCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
     }
 	
 	##fit individual betas/se's
-	maf <- numeric(nrow(SNPInfo))
-	maf[na.omit(which.snps)] <- colMeans(Z,na.rm=TRUE)[which.snps.Z]/2
+	maf0 <- colMeans(Z,na.rm=TRUE)[which.snps.Z]/2
+  	maf0[is.nan(maf0)] <- -1
 	
-	zlrt <- numeric(nrow(SNPInfo))
-	zlrt[na.omit(which.snps)] <- apply(Z[,which.snps.Z, drop = FALSE],2,function(z){
+	maf <- maf0[ZtoSI]
+	names(maf) <- SNPInfo[,snpNames]
+
+	#zlrt <- numeric(nrow(SNPInfo))
+	zlrt <- apply(Z[,which.snps.Z, drop = FALSE],2,function(z){
 		if(any(is.na(z))){
+		  if(all(is.na(z))) z <- rep(0,length(z))
 			mz <- mean(z, na.rm=TRUE)
 			z[is.na(z)] <- mz
 		}
@@ -46,11 +51,12 @@ skatCoxCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 				assign("pb.i", get("pb.i",env)+1,env)
 				if(get("pb.i", env)%%ceiling(nsnps/100) == 0) setTxtProgressBar(get("pb",env),get("pb.i",env))
 		}
-		 model<-coxlr.fit(cbind(z,X), nullmodel$y, nullmodel$strata, NULL,
+		 model<- coxlr.fit(cbind(z,X), nullmodel$y, nullmodel$strata, NULL,
 	       init=c(0,nullcoef),coxph.control(iter.max=100),NULL,"efron",rn)
 		return(sign(coef(model)[1])*sqrt(2*diff(model$loglik)))
-		})
-	
+		})[ZtoSI]
+	names(zlrt) <- SNPInfo[,snpNames]
+	zlrt[is.na(zlrt)] <- 0
 	if(verbose) close(pb)
 	
 	
@@ -78,13 +84,19 @@ skatCoxCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 		if(length(na.omit(inds)) > 0){
 			Z0 <- as.matrix(Z[,na.omit(inds),drop=FALSE])
 			if(any(is.na(Z0))) Z0 <- apply(Z0,2,function(z){
+			  if(all(is.na(z))) z <- rep(0,length(z))
 				mz <- mean(z, na.rm=TRUE)
 				z[is.na(z)] <- mz
 				z
 			})
-				mod1 <- coxlr.fit(cbind(Z0,X), nullmodel$y, nullmodel$strata, NULL,
-	       init=c(rep(0,ncol(Z0)),nullcoef),coxph.control(iter.max=0),NULL,"efron",rn)
-				mcov[!is.na(inds), !is.na(inds)] <- solve(mod1$var[1:ncol(Z0),1:ncol(Z0)])
+			zvar <- apply(Z0,2,var)
+			mod1 <- coxlr.fit(cbind(Z0[,zvar !=0],X), nullmodel$y, nullmodel$strata, NULL,
+	       		init=c(rep(0,ncol(Z0[,zvar !=0])),nullcoef),coxph.control(iter.max=0),NULL,"efron",rn)
+	       	mcov[which(!is.na(inds))[zvar !=0], which(!is.na(inds))[zvar !=0]] <- tryCatch(
+	       		solve(mod1$var[1:sum(zvar !=0),1:sum(zvar !=0),drop=FALSE]), 
+	       		error=function(e){
+	       			crossprod(Z0[nullmodel$y[,"status"]==1,zvar !=0,drop=FALSE])
+	       			})
 		}
 		rownames(mcov) <- colnames(mcov) <- snp.names
 		if(verbose){

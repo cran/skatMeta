@@ -8,7 +8,8 @@ Meta analyze single snp effects from multiple cohorts
 Takes as input `skatCohort` objects (from the \code{\link{skatCohort}} function), and meta analyzes them.
 }
 \usage{
-singlesnpMeta(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", cohortBetas = TRUE, verbose = FALSE)
+singlesnpMeta(..., SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", 
+	cohortBetas = TRUE, verbose = FALSE)
 }
 \arguments{
   \item{\dots}{
@@ -45,6 +46,7 @@ Arie Voorman, Jennifer Brody
 \seealso{
 \code{\link{skatCohort}}
 \code{\link{skatMeta}}
+\code{\link{skatOMeta}}
 }
 \examples{
 data(skatExample)
@@ -63,8 +65,12 @@ bigZ <- matrix(NA,2*n,nrow(SNPInfo))
 colnames(bigZ) <- SNPInfo$Name
 for(gene in unique(SNPInfo$gene)){
 	snp.names <- SNPInfo$Name[SNPInfo$gene == gene]
-	bigZ[1:n,SNPInfo$gene == gene][,snp.names \%in\% colnames(Z1)] <- Z1[,na.omit(match(snp.names,colnames(Z1)))]
-	bigZ[(n+1):(2*n),SNPInfo$gene == gene][,snp.names \%in\% colnames(Z2)] <- Z2[,na.omit(match(snp.names,colnames(Z2)))]
+	bigZ[1:n,SNPInfo$gene == gene][,
+		snp.names \%in\% colnames(Z1)] <- Z1[,
+		na.omit(match(snp.names,colnames(Z1)))]
+	bigZ[(n+1):(2*n),SNPInfo$gene == gene][,
+		snp.names \%in\% colnames(Z2)] <- Z2[,
+		na.omit(match(snp.names,colnames(Z2)))]
 }
 pheno <- rbind(pheno1[,c("y","sex","bmi")],pheno2[,c("y","sex","bmi")])
 out3 <- apply(bigZ,2,function(z){
@@ -83,9 +89,12 @@ out3 <- t(out3[,match(out$Name,colnames(out3))])
 
 ##plot
 par(mfrow=c(2,2))
-plot(x=out3[,1],y=out$beta, xlab = "complete data (Wald)", ylab = "meta-analysis (Score)", main = "coefficients");abline(0,1)
-plot(x=out3[,2],y=out$se, xlab = "complete data (Wald)", ylab = "meta-analysis (Score)", main = "standard errors");abline(0,1)
-plot(x=out3[,3],y=out$p, xlab = "complete data (Wald)", ylab = "meta-analysis (Score)", main = "p-values");abline(0,1)
+plot(x=out3[,1],y=out$beta, xlab = "complete data (Wald)", 
+	ylab = "meta-analysis (Score)", main = "coefficients");abline(0,1)
+plot(x=out3[,2],y=out$se, xlab = "complete data (Wald)", y
+	lab = "meta-analysis (Score)", main = "standard errors");abline(0,1)
+plot(x=out3[,3],y=out$p, xlab = "complete data (Wald)", 
+	ylab = "meta-analysis (Score)", main = "p-values");abline(0,1)
 }
 }
 

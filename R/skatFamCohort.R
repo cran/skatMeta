@@ -1,4 +1,4 @@
-skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", data=parent.frame(), fullkins, id=NULL, sparse = TRUE, verbose = FALSE){
+skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregateBy = "gene", data=parent.frame(), fullkins, sparse = TRUE, verbose = FALSE){
 	require(coxme)
 	##
 	if(is.null(SNPInfo)){ 
@@ -6,32 +6,32 @@ skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 		load(paste(find.package("skatMeta"), "data", "SNPInfo.rda",sep = "/"))
 		aggregateBy = "SKATgene"
 	}
-	if(is.null(id)) id = 1:nrow(data)
-	n <- length(id)
-	tmpidx<-!is.na(match(dimnames(fullkins)[[1]], id))
-    kins<-fullkins[tmpidx, tmpidx]
-    tmpidx<-match(id, dimnames(kins)[[1]])
-    #kins<-as.matrix(tmpkins)[tmpidx, tmpidx]
+	#if(is.null(id)) id = 1:nrow(data)
+	#n <- length(id)
+	n <- dim(fullkins)[1]
+	
+	#tmpidx<-!is.na(match(dimnames(fullkins)[[1]], id))
+   # kins<-fullkins[tmpidx, tmpidx]
+    #tmpidx<-match(id, dimnames(kins)[[1]])
+   # kins<-as.matrix(kins)[tmpidx, tmpidx]
 	SNPInfo[,aggregateBy] <- as.character(SNPInfo[,aggregateBy])
 	
+	kins <- Matrix(kins,sparse=TRUE)
 	if(sparse){
 		kins[kins < 2 * 2^{-6}] <- 0
 		kins <- forceSymmetric(kins)
 	}
 	
 	#fit Null model
-	nullmodel <- lmekin(formula=update(formula, '~.+ (1|id)'), data=data, varlist = 2*kins)
+	nullmodel <- coxme:::lmekin(formula=update(formula, '~.+ (1|id)'), data=data, varlist = 2*kins)
 	nullmodel$theta <- c(nullmodel$vcoef$id*nullmodel$sigma^2,nullmodel$sigma^2)
 	
-	SIGMA <- nullmodel$theta[1]*2*kins+nullmodel$theta[2]*diag(n)
+	SIGMA <- nullmodel$theta[1]*2*kins+nullmodel$theta[2]*Diagonal(n)
 	X1 <- model.matrix(lm(formula,data=data))
 	
 	s2 <- sum(nullmodel$theta)
-	if(sparse){
-		Om_i <- sparseBlockInv(Theta = SIGMA/s2)
-	} else {
-		Om_i <- solve(SIGMA/s2)
-	}
+	Om_i <- solve(SIGMA/s2)
+	
 	#rotate data:
 	res <- as.vector(nullmodel$res)	
 	
@@ -39,18 +39,22 @@ skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 	mysnps <- colnames(Z)
 	
 	which.snps.Z <- colnames(Z) %in% SNPInfo[,snpNames]
-	which.snps <- match(mysnps[which.snps.Z],SNPInfo[,snpNames])
-	
+	#which.snps <- match(mysnps[which.snps.Z],SNPInfo[,snpNames])
+	ZtoSI <- match(SNPInfo[,snpNames], mysnps[which.snps.Z])
+
 	##fit individual betas/se's
 	maf0 <- colMeans(Z,na.rm=TRUE)[which.snps.Z]/2
+  	maf0[is.nan(maf0)] <- -1
 
-	maf <- scores <- numeric(nrow(SNPInfo))
-	maf[na.omit(which.snps)] <- maf0
-	nsnps <- sum(which.snps.Z, na.rm=TRUE)
+	maf <- maf0[ZtoSI]
+	names(maf) <- SNPInfo[,snpNames]
+
+	nsnps <- sum(!is.na(ZtoSI))
 	
 	if(nsnps == 0){ 
 		stop("no column names in Z match SNP names in the SNP Info file!")
 	}
+	
 	env <- environment()
 	if(verbose){
     	cat("\n Scoring... Progress:\n")
@@ -58,9 +62,10 @@ skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
     	pb.i <- 0
     }
 
-	trOmi <- t(res)%*%Om_i
-	scores[na.omit(which.snps)] <- apply(Z[,which.snps.Z,drop=FALSE],2,function(z){
+	trOmi <- t(res) * s2 / nullmodel$theta[2]
+	scores <- apply(Z[,which.snps.Z,drop=FALSE],2,function(z){
 		if(any(is.na(z))){
+		  if(all(is.na(z))) z <- rep(0,length(z))
 			mz <- mean(z, na.rm=TRUE)
 			z[is.na(z)] <- mz
 		}
@@ -69,7 +74,10 @@ skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 				if(get("pb.i", env)%%ceiling(nsnps/100) == 0) setTxtProgressBar(get("pb",env),get("pb.i",env))
 		}
 		as.numeric(trOmi%*%z)
-		})
+		})[ZtoSI]
+	
+	scores[is.na(scores)] <- 0
+	names(scores) <- SNPInfo[,snpNames]
 
 	#deal with monomorphic SNPs
 	scores[maf == 0] <- 0
@@ -93,14 +101,15 @@ skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
     	pb <- txtProgressBar(min = 0, max = ngenes, style = 3)
     	pb.i <- 0
     }	
-	re <- as.list(by(SNPInfo[,snpNames], SNPInfo[,aggregateBy],function(snp.names){
+	re <- tapply(SNPInfo[,snpNames], SNPInfo[,aggregateBy],function(snp.names){
 		inds <- match(snp.names,colnames(Z))
 		mcov <- matrix(0,length(snp.names),length(snp.names))
 		rownames(mcov) <- colnames(mcov) <- snp.names
 		if(length(na.omit(inds)) > 0){
 			Z0 <- as.matrix(Z[,na.omit(inds), drop = FALSE])
 			if(any(is.na(Z0))) Z0 <- apply(Z0,2,function(z){
-				mz <- mean(z, na.rm=TRUE)
+			  if(all(is.na(z))) z <- rep(0,length(z))
+        mz <- mean(z, na.rm=TRUE)
 				z[is.na(z)] <- mz
 				z
 			})
@@ -112,7 +121,7 @@ skatFamCohort <- function(Z, formula, SNPInfo=NULL, snpNames = "Name", aggregate
 		}
 
 		return(mcov)
-	},simplify=FALSE))
+	},simplify=FALSE)
 	if(verbose) close(pb)
 
 	##aggregate
